@@ -4,7 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel
 from pydantic import AfterValidator
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Path
 
 app = FastAPI()
 
@@ -30,7 +30,7 @@ def read_root():
 
 
 @app.get("/users/{user_id}/items/{item_id}")
-async def read_user_item(
+def read_user_item(
     user_id: int, item_id: str, q: str | None = None, short: bool = False
 ):
     item = {"item_id": item_id, "owner_id": user_id}
@@ -65,12 +65,12 @@ def update_item(a: int, b: int):
 
 # Evaluated in order! `/users/me` before `/users/{user_id}`
 @app.get("/users/me")
-async def read_user_me():
+def read_user_me():
     return {"user_id": "the current user"}
 
 
 @app.get("/users/{user_id}")
-async def read_user(user_id: str):
+def read_user(user_id: str):
     return {"user_id": user_id}
 
 
@@ -78,7 +78,7 @@ async def read_user(user_id: str):
 
 
 @app.get("/wiki/{champion}")
-async def get_wiki_champion(champion: Champion):
+def get_wiki_champion(champion: Champion):
 
     # In Python, only functions, classes, and modules introduce a new scope.
     # Control flow blocks like match, if, for, while do NOT create a new scope.
@@ -100,7 +100,7 @@ async def get_wiki_champion(champion: Champion):
 
 # File paths work with `:path`, but this wont show in the docs
 @app.get("/files/{file_path:path}")
-async def read_file(file_path: str):
+def read_file(file_path: str):
     return {"file_path": file_path}
 
 
@@ -109,7 +109,7 @@ async def read_file(file_path: str):
 
 
 @app.get("/items/")
-async def read_items(
+def read_items(
     q: Annotated[
         str | None, Query(min_length=3, max_length=50, pattern="^fixedquery\d*$")
     ] = None,
@@ -121,7 +121,7 @@ async def read_items(
 
 
 @app.get("/items/list/")
-async def read_item_list(
+def read_item_list(
     q: Annotated[
         list[str] | None,
         Query(
@@ -154,7 +154,7 @@ def check_valid_id(id: str):
 
 
 @app.get("/movie/")
-async def get_movie(
+def get_movie(
     id: Annotated[str | None, AfterValidator(check_valid_id)] = None,
 ):
     if id:
@@ -162,3 +162,19 @@ async def get_movie(
     else:
         id, item = random.choice(list(data.items()))
     return {"id": id, "name": item}
+
+# --------------------------------------------------------------------------------------------------
+
+@app.get("/path/items/{item_id}")
+def read_items(
+    *,
+    item_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    q: str,
+    size: Annotated[float, Query(gt=0, lt=10.5)],
+):
+    results = {"item_id": item_id}
+    if q:
+        results.update({"q": q})
+    if size:
+        results.update({"size": size})
+    return results
