@@ -1,7 +1,8 @@
 import requests
+from frontend.config import get_settings
 
 
-BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = get_settings().base_url
 
 
 def create_url(url: str) -> str:

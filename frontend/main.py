@@ -1,46 +1,9 @@
-from unittest import result
 from nicegui import PageArguments, ui
-from api import create_url, get_admin_info
 
-
-def on_submit(url: str):
-    try:
-        result = create_url(url)
-        result_area.visible = True
-        result_area.clear()
-        with result_area:
-            with ui.label("Your shortened URL: "):
-                ui.link(result.get('url', ''), result.get('url', ''), new_tab=True)
-            with ui.label("Your original URL: "):
-                ui.link(result.get('target_url', ''), result.get('target_url', ''), new_tab=True)
-            with ui.label("Admin Key: "):
-                ui.link(result.get('admin_url', '').split("/")[-1], f"/admin?key={result.get('admin_url', '').split('/')[-1]}")
-        ui.notify("URL shortened successfully!", color="green")
-    except Exception as e:
-        ui.notify(f"Error: {str(e)}", color="red")
-        
-def on_admin_submit(admin_key: str):
-    if not admin_key:
-        ui.notify("Please enter an admin key.", color="red")
-        return
-    try:
-        result = get_admin_info(admin_key)
-        result_area.visible = True
-        result_area.clear()
-        with result_area:
-            with ui.label("Shortened URL: "):
-                ui.link(result.get('url', ''), result.get('url', ''), new_tab=True)
-            with ui.label("Original URL: "):
-                ui.link(result.get('target_url', ''), result.get('target_url', ''), new_tab=True)
-            with ui.label("Clicks: "):
-                ui.label(str(result.get('clicks', 0)))
-            if result.get('is_active', False) == True:
-                ui.label("Status: Active")
-            else:
-                ui.label("Status: Inactive")
-        ui.notify("Admin info retrieved successfully!", color="green")
-    except Exception as e:
-        ui.notify(f"Error: {str(e)}", color="red")
+from frontend.services.url_service import URLService
+from frontend.ui.components import create_input_field, create_result_area
+from frontend.ui.handlers import handle_admin_submit, handle_url_submit
+from frontend.shared_state import get_result_area, set_result_area
 
 
 @ui.page("/")
@@ -58,64 +21,64 @@ def index():
         title = ui.link("URL Shortener", "/").classes(
             "text-4xl font-bold bg-gradient-to-r from-purple-500 to-cyan-400 bg-clip-text text-transparent mt-12 text-center"
         )
+        subtitle = ui.label().classes(
+            "text-lg text-gray-600 dark:text-gray-400 text-center max-w-2xl"
+        )
+        page_switcher = (
+            ui.button().classes("absolute top-4 left-4").props("color=primary")
+        )
         ui.switch().bind_value(dark).props("flat round color=primary").tooltip(
             "Toggle dark mode"
         ).classes("absolute top-4 right-4")
-        ui.sub_pages({"/": main, "/admin": admin}, data={"title": title}).classes("w-full max-w-[1024px]")
+        ui.sub_pages(
+            {"/": main, "/admin": admin},
+            data={"title": title, "subtitle": subtitle, "page_switcher": page_switcher},
+        ).classes("w-full max-w-[1024px] items-center")
 
 
-def main(title: ui.label):
-    title.text = "URL Shortener"
-    ui.button("Go to Admin page", on_click=lambda: ui.navigate.to("/admin")).classes(
-        "absolute top-4 left-4"
-    ).props("color=primary")
-    with ui.row().classes("w-full justify-center gap-4 items-center"):
-        url_to_shorten_box = (
-            ui.input(
-                label="URL to shorten",
-                placeholder="Enter URL here",
-                value="https://bin-nich-kreativ.de",
-            )
-            .classes("w-full max-w-2xl")
-            .props("clearable")
-        )
-        shorten_button = ui.button(
-            "Shorten", on_click=lambda: on_submit(url_to_shorten_box.value)
-        ).props("color=primary")
-        
-    global result_area
-    result_area = ui.column().classes(
-        "w-full max-w-[1024px] flex flow-col justify-center p-8 shadow-lg rounded-xl bg-gray-200/60 dark:bg-gray-800/60"
+def main(title: ui.label, subtitle: ui.label, page_switcher: ui.button):
+    # global elements
+    title.text = "🔗 URL Shortener"
+    subtitle.text = "Transform long URLs into short, shareable links"
+    page_switcher.text = "⚙️ Admin Panel"
+    page_switcher.on("click", lambda: ui.navigate.to("/admin"))
+    
+    create_input_field(
+        title="Shorten Your URL",
+        input_title="Enter URL",
+        input_placeholder="https://example.com/your-long-url",
+        input_value="https://bin-nich-kreativ.de",
+        button_label="Shorten URL",
+        tip="💡 Make sure your URL starts with http:// or https://",
+        on_submit=handle_url_submit,
     )
-    result_area.visible = False
+    
+    set_result_area(create_result_area())
 
 
-def admin(args: PageArguments, title: ui.label):
+
+def admin(
+    args: PageArguments, title: ui.label, subtitle: ui.label, page_switcher: ui.button
+):
     key = args.query_parameters.get("key", "")
-    title.text = "URL Shortener Admin Page"
-    ui.label("Admin page content")
-    ui.button("Go to main page", on_click=lambda: ui.navigate.to("/")).classes(
-        "absolute top-4 left-4"
-    ).props("color=primary")
-    with ui.row().classes("w-full justify-center gap-4 items-center"):
-        admin_key_box = (
-            ui.input(
-                label="Admin Key",
-                placeholder="Enter Admin Key here",
-                value=key if key else "BQEON_XHQGE93U",
-            )
-            .classes("w-full max-w-2xl")
-            .props("clearable")
-        )
-        admin_button = ui.button(
-            "get info", on_click=lambda: on_admin_submit(admin_key_box.value)
-        ).props("color=primary")
-        
-    global result_area
-    result_area = ui.column().classes(
-        "w-full max-w-[1024px] flex flow-col justify-center p-8 shadow-lg rounded-xl bg-gray-200/60 dark:bg-gray-800/60"
+    
+    # global elements
+    title.text = "⚙️ Admin Dashboard"
+    subtitle.text = "Manage and monitor your shortened URLs"
+    page_switcher.text = "🏠 Back to Home"
+    page_switcher.on("click", lambda: ui.navigate.to("/"))
+    
+    create_input_field(
+        title="Admin Access",
+        input_title="Admin Key",
+        input_placeholder="Enter your admin key here",
+        input_value=key if key else "BQEON_XHQGE93U",
+        button_label="Get Analytics",
+        tip="🔑 Use the admin key provided when you created your short URL",
+        on_submit=handle_admin_submit,
     )
-    result_area.visible = False
+
+    set_result_area(create_result_area())
 
 
 ui.run(favicon="🔗", title="API Shortener")
