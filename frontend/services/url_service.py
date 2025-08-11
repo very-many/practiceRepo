@@ -1,4 +1,4 @@
-from frontend.services.api import create_url, get_admin_info
+from frontend.services.api import create_short_url, delete_short_url, get_admin_info, toggle_short_url
 from typing import Dict, Any
 
 
@@ -10,7 +10,7 @@ class URLService:
         if not url or not url.strip():
             raise ValueError("URL cannot be empty")
             
-        result = create_url(url)
+        result = create_short_url(url)
         return result
     
     @staticmethod
@@ -20,3 +20,17 @@ class URLService:
             
         result = get_admin_info(admin_key)
         return result
+    
+    @staticmethod
+    def delete_short_url(secret_key: str) -> None:
+        if not secret_key or not secret_key.strip():
+            raise ValueError("Secret key cannot be empty")
+
+        delete_short_url(secret_key)
+
+    @staticmethod
+    def toggle_short_url(secret_key: str) -> None:
+        if not secret_key or not secret_key.strip():
+            raise ValueError("Secret key cannot be empty")
+
+        toggle_short_url(secret_key)

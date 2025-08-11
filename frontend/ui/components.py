@@ -1,5 +1,7 @@
+from typing_extensions import Literal
 from nicegui import ui
 from typing import Callable
+
 
 def create_admin_highlight_card(title: str, status: str, icon: str, color: str):
     with ui.card().classes(
@@ -84,9 +86,66 @@ def create_input_field(
         if tip:
             ui.label(tip).classes("text-sm text-gray-500 dark:text-gray-400 mt-2")
 
+
 def create_result_area():
     result_area = ui.card().classes(
         "w-full max-w-4xl p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl"
     )
     result_area.visible = False
     return result_area
+
+
+def create_dialog(
+    title: str,
+    message: str,
+    on_confirm: Callable[[], None],
+    gradient: str = "negative",
+    button_label: str = "Confirm",
+):
+    # Confirm button with colorful gradient
+    color_gradients = {
+        "negative": "from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600",
+        "positive": "from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600",
+        "primary": "from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600",
+        "warning": "from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600",
+    }
+    gradient = color_gradients.get(gradient, color_gradients["negative"])
+    dialog = ui.dialog().classes("w-full")
+    with dialog:
+        card = (
+            ui.card()
+            .classes(
+                "w-full max-w-md p-8 backdrop-blur-xl border border-white/20 dark:border-white/10 !rounded-2xl shadow-2xl"
+            )
+            .style(
+                "background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);"
+            )
+            .props("flat")
+        )
+
+        with card:
+            # Title with gradient text
+            ui.label(title).classes(
+                f"text-xl font-bold mb-3 bg-gradient-to-r {gradient} bg-clip-text text-transparent select-none"
+            )
+
+            # Message with subtle styling
+            ui.label(message).classes(
+                "text-gray-700 dark:text-gray-300 mb-8 leading-relaxed"
+            )
+
+            with ui.row().classes("w-full justify-end gap-3"):
+                # Cancel button with glassmorphism
+                ui.button("Cancel", on_click=dialog.close).props("flat").classes(
+                    "px-6 py-2 bg-white/20 hover:bg-white/40 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl !text-gray-700 dark:!text-gray-300 transition-all duration-200"
+                ).style("box-shadow: 0 4px 15px rgba(0,0,0,0.1);")
+
+                ui.button(
+                    button_label, on_click=lambda: [dialog.close(), on_confirm()]
+                ).props("flat").classes(
+                    f"px-6 py-2 bg-gradient-to-r {gradient} text-white rounded-xl font-medium transition-all duration-200 hover:opacity-40"
+                ).style(
+                    "box-shadow: 0 4px 20px rgba(0,0,0,0.2);"
+                )
+
+    dialog.open()

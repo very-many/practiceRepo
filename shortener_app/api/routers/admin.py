@@ -26,8 +26,19 @@ def get_url_info(secret_key: str, request: Request, db: Session = Depends(get_db
 def delete_url(secret_key: str, request: Request, db: Session = Depends(get_db)):
     url_service = URLService(db)
 
-    if db_url := url_service.deactivate_short_url(secret_key=secret_key):
+    if db_url := url_service.delete_short_url(secret_key=secret_key):
         message = f"Successfully deleted shortened URL for '{db_url.target_url}'"
+        return {"detail": message}
+    else:
+        raise_not_found(request)
+
+
+@router.put("/{secret_key}/is_active")
+def activate_url(secret_key: str, request: Request, db: Session = Depends(get_db)):
+    url_service = URLService(db)
+
+    if db_url := url_service.toggle_short_url(secret_key=secret_key):
+        message = f"Successfully {'reactivated' if db_url.is_active else 'deactivated'} shortened URL for '{db_url.target_url}'"
         return {"detail": message}
     else:
         raise_not_found(request)
