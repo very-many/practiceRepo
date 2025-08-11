@@ -1,9 +1,8 @@
 from nicegui import PageArguments, ui
 
-from frontend.services.url_service import URLService
 from frontend.ui.components import create_input_field, create_result_area
 from frontend.ui.handlers import handle_admin_submit, handle_url_submit
-from frontend.shared_state import get_result_area, set_result_area
+from frontend.shared_state import set_result_area
 
 
 @ui.page("/")
