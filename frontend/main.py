@@ -71,13 +71,16 @@ def admin(
         title="Admin Access",
         input_title="Admin Key",
         input_placeholder="Enter your admin key here",
-        input_value=key if key else "BQEON_XHQGE93U",
+        input_value=key if key else "",
         button_label="Get Analytics",
         tip="🔑 Use the admin key provided when you created your short URL",
         on_submit=handle_admin_submit,
     )
 
     set_result_area(create_result_area())
+    
+    if key:
+        handle_admin_submit(key, notification=False)
 
 
 ui.run(favicon="🔗", title="API Shortener")

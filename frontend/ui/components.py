@@ -149,3 +149,12 @@ def create_dialog(
                 )
 
     dialog.open()
+
+def create_button(label: str, onclick: Callable[[], None], color: str):
+    ui.button(
+                label, on_click=lambda: onclick()
+            ).props("flat size=md").classes(
+                f"px-6 py-3 bg-{color}-100 hover:bg-{color}-200 dark:bg-{color}-800/20 hover:dark:bg-{color}-800/30 rounded-xl !text-{color}-700 dark:!text-{color}-400 transition-all duration-200 shadow-lg w-full sm:!w-auto"
+            )
+
+

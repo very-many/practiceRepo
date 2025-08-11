@@ -34,7 +34,7 @@ def delete_url(secret_key: str, request: Request, db: Session = Depends(get_db))
 
 
 @router.put("/{secret_key}/is_active")
-def activate_url(secret_key: str, request: Request, db: Session = Depends(get_db)):
+def toggle_url(secret_key: str, request: Request, db: Session = Depends(get_db)):
     url_service = URLService(db)
 
     if db_url := url_service.toggle_short_url(secret_key=secret_key):

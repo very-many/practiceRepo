@@ -3,6 +3,7 @@ from frontend.services.url_service import URLService
 from frontend.shared_state import get_result_area, set_result_area
 from frontend.ui.components import (
     create_admin_highlight_card,
+    create_button,
     create_dialog,
     create_shorten_url_result_card,
 )
@@ -12,12 +13,12 @@ def handle_url_submit(url: str):
     """Handle URL shortening submission"""
     try:
         result = URLService.shorten_url(url)
-        ui.notify("URL shortened successfully!", color="positive", position="top")
+        ui.notify("URL shortened successfully!", color="positive")
         _display_url_success(result)
     except ValueError as e:
-        ui.notify(f"⚠️ {str(e)}", color="warning", position="top")
+        ui.notify(f"⚠️ {str(e)}", color="warning")
     except Exception as e:
-        ui.notify(f"❌ Error: {str(e)}", color="negative", position="top")
+        ui.notify(f"❌ Error: {str(e)}", color="negative")
 
 
 def handle_admin_submit(secret_key: str, notification: bool = True):
@@ -26,13 +27,13 @@ def handle_admin_submit(secret_key: str, notification: bool = True):
         result = URLService.get_url_analytics(secret_key)
         if notification:
             ui.notify(
-                "Admin data loaded successfully!", color="positive", position="top"
+                "Admin data loaded successfully!", color="positive"
             )
         _display_admin_success(result)
     except ValueError as e:
-        ui.notify(f"⚠️ {str(e)}", color="warning", position="top")
+        ui.notify(f"⚠️ {str(e)}", color="warning")
     except Exception as e:
-        ui.notify(f"❌ Error: {str(e)}", color="negative", position="top")
+        ui.notify(f"❌ Error: {str(e)}", color="negative")
 
 
 def handle_toggle_url(secret_key: str, is_active: bool = True):
@@ -41,27 +42,26 @@ def handle_toggle_url(secret_key: str, is_active: bool = True):
         URLService.toggle_short_url(secret_key)
         ui.notify(
             f"URL {'reactivated' if is_active else 'deactivated'} successfully!",
-            color="positive",
-            position="top",
+            color="positive"
         )
         handle_admin_submit(secret_key, notification=False)
     except ValueError as e:
-        ui.notify(f"⚠️ {str(e)}", color="warning", position="top")
+        ui.notify(f"⚠️ {str(e)}", color="warning")
     except Exception as e:
-        ui.notify(f"❌ Error: {str(e)}", color="negative", position="top")
+        ui.notify(f"❌ Error: {str(e)}", color="negative")
 
 
 def handle_delete_url(secret_key: str):
     """Handle URL deletion"""
     try:
         URLService.delete_short_url(secret_key)
-        ui.notify("URL deleted successfully!", color="positive", position="top")
+        ui.notify("URL deleted successfully!", color="positive")
         get_result_area().visible = False
         get_result_area().clear()
     except ValueError as e:
-        ui.notify(f"⚠️ {str(e)}", color="warning", position="top")
+        ui.notify(f"⚠️ {str(e)}", color="warning")
     except Exception as e:
-        ui.notify(f"❌ Error: {str(e)}", color="negative", position="top")
+        ui.notify(f"❌ Error: {str(e)}", color="negative")
 
 
 def handle_delete_url_confirm(secret_key: str):
@@ -174,26 +174,21 @@ def _display_admin_success(result):
         )
 
         # Admin actions
-        with ui.row().classes("w-full flex justify-between gap-4 mt-6"):
-            ui.button(
-                "🔄️ Refresh Data", on_click=lambda: handle_admin_submit(secret_key)
-            ).props("flat size=md").classes(
-                "px-6 py-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-800/20 hover:dark:bg-blue-800/30 rounded-xl !text-blue-700 dark:!text-blue-400 transition-all duration-200 shadow-lg"
+        with ui.row().classes(
+            "w-full flex sm:flex-row flex-col justify-between gap-4 mt-6"
+        ):
+            create_button(
+                label="🔄️ Refresh Data",
+                onclick=lambda: handle_admin_submit(secret_key),
+                color="blue",
             )
-
-            ui.button(
-                "🧯 Delete URL", on_click=lambda: handle_delete_url_confirm(secret_key)
-            ).props("flat size=md").classes(
-                "px-6 py-3 bg-red-100 hover:bg-red-200 dark:bg-red-800/20 hover:dark:bg-red-800/30 rounded-xl !text-red-700 dark:!text-red-400 transition-all duration-200 shadow-lg"
+            create_button(
+                label="🧯 Delete URL",
+                onclick=lambda: handle_delete_url_confirm(secret_key),
+                color="red",
             )
-
-
-
-            ui.button(
-                f"{"🗑️ Deactivate URL" if result.get('is_active', True) else "♻️ Reactivate URL"}",
-                on_click=lambda: handle_toggle_url(
-                    secret_key, is_active=result.get('is_active', True)
-                ),
-            ).props("flat size=md").classes(
-                f"px-6 py-3 {'bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-800/20 hover:dark:bg-yellow-800/30 !text-yellow-700 dark:!text-yellow-400' if result.get('is_active', True) else 'bg-green-100 hover:bg-green-200 dark:bg-green-800/20 dark:hover:bg-green-800/30 !text-green-700 dark:!text-green-400'} rounded-xl transition-all duration-200 shadow-lg"
+            create_button(
+                label=f"{'🗑️ Deactivate URL' if status_active else '♻️ Reactivate URL'}",
+                onclick=lambda: handle_toggle_url(secret_key, is_active=status_active),
+                color="yellow" if status_active else "green",
             )
