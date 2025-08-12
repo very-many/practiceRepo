@@ -1,6 +1,6 @@
 from nicegui import ui
 from frontend.services.url_service import URLService
-from frontend.shared_state import get_result_area, set_result_area
+from frontend.shared_state import get_result_area
 from frontend.ui.components import (
     create_admin_highlight_card,
     create_button,
@@ -41,7 +41,7 @@ def handle_toggle_url(secret_key: str, is_active: bool = True):
     try:
         URLService.toggle_short_url(secret_key)
         ui.notify(
-            f"URL {'reactivated' if is_active else 'deactivated'} successfully!",
+            f"URL {'deactivated' if is_active else 'reactivated'} successfully!",
             color="positive"
         )
         handle_admin_submit(secret_key, notification=False)

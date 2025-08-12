@@ -1,4 +1,3 @@
-from typing_extensions import Literal
 from nicegui import ui
 from typing import Callable
 
