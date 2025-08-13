@@ -71,7 +71,7 @@ def admin(
         title="Admin Access",
         input_title="Admin Key",
         input_placeholder="Enter your admin key here",
-        input_value=key if key else "",
+        input_value=key,
         button_label="Get Analytics",
         tip="🔑 Use the admin key provided when you created your short URL",
         on_submit=handle_admin_submit,
